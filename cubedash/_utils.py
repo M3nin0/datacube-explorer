@@ -51,15 +51,18 @@ NEAR_ANTIMERIDIAN = shape(
 )
 
 # CRS's we use as inference results
-DEFAULT_CRS_INFERENCES = [4283, 4326]
+# Corrego Alegre for BDC (Temporary approach)
+DEFAULT_CRS_INFERENCES = [
+    22521, 22522, 22523, 22524, 22525
+]
 MATCH_CUTOFF = 0.38
 
 _LOG = structlog.get_logger()
 
 
 def infer_crs(crs_str: str) -> Optional[str]:
-    plausible_list = [PJCRS.from_epsg(code).to_wkt() for code in DEFAULT_CRS_INFERENCES]
-    closest_wkt = difflib.get_close_matches(crs_str, plausible_list, cutoff=0.38)
+    plausible_list = [PJCRS(code).to_wkt() for code in DEFAULT_CRS_INFERENCES]
+    closest_wkt = difflib.get_close_matches(crs_str, plausible_list, cutoff=MATCH_CUTOFF)
     if len(closest_wkt) == 0:
         return
     epsg = PJCRS.from_wkt(closest_wkt[0]).to_epsg()
@@ -169,10 +172,10 @@ def _next_month(date: datetime):
 
 
 def as_time_range(
-    year: Optional[int] = None,
-    month: Optional[int] = None,
-    day: Optional[int] = None,
-    tzinfo=None,
+        year: Optional[int] = None,
+        month: Optional[int] = None,
+        day: Optional[int] = None,
+        tzinfo=None,
 ) -> Optional[Range]:
     """
     >>> as_time_range(2018)
@@ -465,7 +468,7 @@ ODC_DATASET = datacube.drivers.postgres._schema.DATASET
 
 
 def get_mutable_dataset_search_fields(
-    index: Index, md: MetadataType
+        index: Index, md: MetadataType
 ) -> Dict[str, PgDocField]:
     """
     Get a copy of a metadata type's fields that we can mutate.
